@@ -29,16 +29,16 @@ namespace WebApplication1
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCors(options =>
-            {
-                options.AddPolicy(EnvOrigins,
-                    builder =>
-                    {
-                        builder.WithOrigins("http://localhost:5001", "http://localhost:5003")
-                            .AllowAnyHeader()
-                            .AllowAnyMethod();
-                    });
-            });
+            //services.AddCors(options =>
+            //{
+            //    options.AddPolicy(EnvOrigins,
+            //        builder =>
+            //        {
+            //            builder.WithOrigins("http://localhost:5001", "http://localhost:5003", "http://localhost:5004")
+            //                .AllowAnyHeader()
+            //                .AllowAnyMethod();
+            //        });
+            //});
 
             services.AddMvc();
 
@@ -210,6 +210,31 @@ namespace WebApplication1
                     IdentityTokenLifetime = 3600, // секунд, это значение по умолчанию
 
                     // разрешено ли получение refresh-токенов через указание scope offline_access
+                    AllowOfflineAccess = false,
+                },
+                new Client
+                {
+                    ClientId = "js2",
+                    ClientName = "JavaScript Client2",
+                    AllowedGrantTypes = GrantTypes.Implicit,
+                    AllowAccessTokensViaBrowser = true,
+                    AlwaysIncludeUserClaimsInIdToken = true,
+                    RedirectUris = {
+                        "http://localhost:5004/callback.html",
+                        "http://localhost:5004/callback-silent.html"
+                    },
+                    PostLogoutRedirectUris = { "http://localhost:5004/index.html" },
+                    AllowedCorsOrigins = { "http://localhost:5004" },
+                    AllowedScopes =
+                    {
+                        IdentityServerConstants.StandardScopes.OpenId,
+                        IdentityServerConstants.StandardScopes.Profile,
+                        "api1"
+                    },
+
+                    AccessTokenLifetime = 300, 
+                    IdentityTokenLifetime = 3600, 
+
                     AllowOfflineAccess = false,
                 }
             };

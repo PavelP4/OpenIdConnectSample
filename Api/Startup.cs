@@ -19,7 +19,7 @@ namespace Api
                 // задаём политику CORS, чтобы наше клиентское приложение могло отправить запрос на сервер API
                 options.AddPolicy("default", policy =>
                 {
-                    policy.WithOrigins("http://localhost:5003")
+                    policy.WithOrigins("http://localhost:5003", "http://localhost:5004")
                         .AllowAnyHeader()
                         .AllowAnyMethod();
                 });
