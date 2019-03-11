@@ -45,9 +45,6 @@ namespace WebApplication1
 
             var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
 
-
-
-
             services.AddIdentityServer(options =>
                 {
                     // http://docs.identityserver.io/en/release/reference/options.html#refoptions
@@ -110,6 +107,8 @@ namespace WebApplication1
                 // настройки клиентских приложений
                 //.AddInMemoryClients(GetClients());
         }
+
+        #region MyRegion
 
         private static void InitializeDatabase(IApplicationBuilder app)
         {
@@ -273,6 +272,8 @@ namespace WebApplication1
             };
         }
 
+        #endregion
+
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
@@ -282,7 +283,7 @@ namespace WebApplication1
             loggerFactory.AddConsole(LogLevel.Debug);
             app.UseDeveloperExceptionPage();
 
-            app.UseCors(EnvOrigins);
+            //app.UseCors(EnvOrigins);
 
             // подключаем middleware IdentityServer
             app.UseIdentityServer();
