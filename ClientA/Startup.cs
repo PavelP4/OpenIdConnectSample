@@ -15,11 +15,11 @@ namespace ClientA
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            //services.Configure<IISOptions>(iis =>
-            //{
-            //    iis.AuthenticationDisplayName = "Windows";
-            //    iis.AutomaticAuthentication = false;
-            //});
+            services.Configure<IISOptions>(iis =>
+            {
+                iis.AuthenticationDisplayName = "Windows";
+                iis.AutomaticAuthentication = false;
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

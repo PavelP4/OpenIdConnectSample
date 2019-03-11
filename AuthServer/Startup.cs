@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security.Claims;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using IdentityServer4;
 using IdentityServer4.Configuration;
@@ -77,7 +80,9 @@ namespace AuthServer
 
                 })
                 // тестовый x509-сертификат, IdentityServer использует RS256 для подписи JWT
-                .AddDeveloperSigningCredential()
+                //.AddDeveloperSigningCredential()
+                .AddSigningCredential(new X509Certificate2(Path.Combine(Directory.GetCurrentDirectory(), "certs", "IdentityServer4Auth.pfx")))
+         
                 // тестовые пользователи
                 .AddTestUsers(GetUsers())
                 // this adds the config data from DB (clients, resources)
