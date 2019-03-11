@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Security.Claims;
+using System.Threading.Tasks;
 using IdentityServer4;
 using IdentityServer4.Configuration;
 using IdentityServer4.EntityFramework.DbContexts;
@@ -11,22 +13,18 @@ using IdentityServer4.Test;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 
-namespace WebApplication1
+namespace AuthServer
 {
     public class Startup
     {
         private const string EnvOrigins = "EnvOrigins";
 
         private const string ConnectionString = @"Data Source=.;Initial Catalog=IdentityServer4;Persist Security Info=True;User ID=sa;Password=@dmin2017;";
-        
 
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
             //services.AddCors(options =>
@@ -100,12 +98,12 @@ namespace WebApplication1
                     options.EnableTokenCleanup = true;
                     options.TokenCleanupInterval = 30;
                 });
-                // что включать в id_token
-                //.AddInMemoryIdentityResources(GetIdentityResources())
-                // что включать в access_token
-                //.AddInMemoryApiResources(GetApiResources())
-                // настройки клиентских приложений
-                //.AddInMemoryClients(GetClients());
+            // что включать в id_token
+            //.AddInMemoryIdentityResources(GetIdentityResources())
+            // что включать в access_token
+            //.AddInMemoryApiResources(GetApiResources())
+            // настройки клиентских приложений
+            //.AddInMemoryClients(GetClients());
         }
 
         #region MyRegion
@@ -231,8 +229,8 @@ namespace WebApplication1
                         "api1"
                     },
 
-                    AccessTokenLifetime = 300, 
-                    IdentityTokenLifetime = 3600, 
+                    AccessTokenLifetime = 300,
+                    IdentityTokenLifetime = 3600,
 
                     AllowOfflineAccess = false,
                 }
