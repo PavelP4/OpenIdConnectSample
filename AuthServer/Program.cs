@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Net;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
@@ -15,8 +16,17 @@ namespace AuthServer
 
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .UseUrls("http://localhost:5000")
+                .UseKestrel(options =>
+                {
+                    options.AddServerHeader = false;
+                    options.Limits.MaxRequestBodySize = null;
+                    options.Limits.MaxResponseBufferSize = null;
+
+                    options.Listen(IPAddress.Loopback, 5000);
+                })
+                //.UseUrls("http://localhost:5000")
                 .UseContentRoot(Directory.GetCurrentDirectory())
+                .UseIIS()
                 .UseIISIntegration()
                 .ConfigureLogging(b =>
                 {

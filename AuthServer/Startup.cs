@@ -14,6 +14,7 @@ using IdentityServer4.EntityFramework.Mappers;
 using IdentityServer4.Models;
 using IdentityServer4.Test;
 using log4net;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -49,7 +50,7 @@ namespace AuthServer
             //                .AllowAnyMethod();
             //        });
             //});
-            
+
             _logger.LogInformation("ConfigureServices started");
 
             services.AddMvc();
@@ -126,6 +127,18 @@ namespace AuthServer
             {
                 _logger.LogError(e, "Error when services.AddIdentityServer");
             }
+            
+            services.Configure<IISOptions>(iis =>
+            {
+                iis.AuthenticationDisplayName = "Windows";
+                iis.AutomaticAuthentication = false;
+            });
+
+
+            //services.AddAuthentication().AddOpenIdConnect(o =>
+            //{
+            //    o.
+            //});
 
         }
 
@@ -256,6 +269,8 @@ namespace AuthServer
                     IdentityTokenLifetime = 3600,
 
                     AllowOfflineAccess = false,
+
+                    EnableLocalLogin = false
                 }
             };
         }
@@ -307,6 +322,8 @@ namespace AuthServer
 
             // подключаем middleware IdentityServer
             app.UseIdentityServer();
+
+            //app.UseOpenIdConnectAuthentication(); //new OpenIdConnectOptions { }
 
             // эти 2 строчки нужны, чтобы нормально обрабатывались страницы логина
             app.UseStaticFiles();
