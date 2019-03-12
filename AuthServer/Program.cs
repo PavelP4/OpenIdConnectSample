@@ -2,6 +2,7 @@
 using System.IO;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace AuthServer
 {
@@ -17,6 +18,12 @@ namespace AuthServer
                 .UseUrls("http://localhost:5000")
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseIISIntegration()
+                .ConfigureLogging(b =>
+                {
+                    b.SetMinimumLevel(LogLevel.Debug);
+                    b.AddConsole();
+                    b.AddLog4Net("log4net.config", true);
+                })
                 .UseStartup<Startup>()
                 .Build();
 

@@ -13,6 +13,7 @@ using IdentityServer4.EntityFramework.DbContexts;
 using IdentityServer4.EntityFramework.Mappers;
 using IdentityServer4.Models;
 using IdentityServer4.Test;
+using log4net;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -28,6 +29,14 @@ namespace AuthServer
 
         private const string ConnectionString = @"Data Source=.;Initial Catalog=IdentityServer4;Persist Security Info=True;User ID=sa;Password=@dmin2017;";
 
+        private readonly ILogger<Startup> _logger;
+
+        public Startup(ILoggerFactory loggerFactory)
+        {
+            _logger = loggerFactory.CreateLogger<Startup>();
+        }
+
+
         public void ConfigureServices(IServiceCollection services)
         {
             //services.AddCors(options =>
@@ -40,75 +49,84 @@ namespace AuthServer
             //                .AllowAnyMethod();
             //        });
             //});
+            
+            _logger.LogInformation("ConfigureServices started");
 
             services.AddMvc();
 
-
             var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
 
-            services.AddIdentityServer(options =>
-                {
-                    // http://docs.identityserver.io/en/release/reference/options.html#refoptions
-                    options.Endpoints = new EndpointsOptions
+            try
+            {
+                services.AddIdentityServer(options =>
                     {
-                        // в Implicit Flow используется для получения токенов
-                        EnableAuthorizeEndpoint = true,
-                        // для получения статуса сессии
-                        EnableCheckSessionEndpoint = true,
-                        // для логаута по инициативе пользователя
-                        EnableEndSessionEndpoint = true,
-                        // для получения claims аутентифицированного пользователя 
-                        // http://openid.net/specs/openid-connect-core-1_0.html#UserInfo
-                        EnableUserInfoEndpoint = true,
-                        // используется OpenId Connect для получения метаданных
-                        EnableDiscoveryEndpoint = true,
+                        // http://docs.identityserver.io/en/release/reference/options.html#refoptions
+                        options.Endpoints = new EndpointsOptions
+                        {
+                            // в Implicit Flow используется для получения токенов
+                            EnableAuthorizeEndpoint = true,
+                            // для получения статуса сессии
+                            EnableCheckSessionEndpoint = true,
+                            // для логаута по инициативе пользователя
+                            EnableEndSessionEndpoint = true,
+                            // для получения claims аутентифицированного пользователя 
+                            // http://openid.net/specs/openid-connect-core-1_0.html#UserInfo
+                            EnableUserInfoEndpoint = true,
+                            // используется OpenId Connect для получения метаданных
+                            EnableDiscoveryEndpoint = true,
 
-                        // для получения информации о токенах, мы не используем
-                        EnableIntrospectionEndpoint = false,
-                        // нам не нужен т.к. в Implicit Flow access_token получают через authorization_endpoint
-                        EnableTokenEndpoint = false,
-                        // мы не используем refresh и reference tokens 
-                        // http://docs.identityserver.io/en/release/topics/reference_tokens.html
-                        EnableTokenRevocationEndpoint = false
-                    };
+                            // для получения информации о токенах, мы не используем
+                            EnableIntrospectionEndpoint = false,
+                            // нам не нужен т.к. в Implicit Flow access_token получают через authorization_endpoint
+                            EnableTokenEndpoint = false,
+                            // мы не используем refresh и reference tokens 
+                            // http://docs.identityserver.io/en/release/topics/reference_tokens.html
+                            EnableTokenRevocationEndpoint = false
+                        };
 
-                    // IdentitySever использует cookie для хранения своей сессии
-                    options.Authentication = new IdentityServer4.Configuration.AuthenticationOptions
+                        // IdentitySever использует cookie для хранения своей сессии
+                        options.Authentication = new IdentityServer4.Configuration.AuthenticationOptions
+                        {
+                            CookieLifetime = TimeSpan.FromDays(1)
+                        };
+
+                    })
+                    // тестовый x509-сертификат, IdentityServer использует RS256 для подписи JWT
+                    //.AddDeveloperSigningCredential()
+                    .AddSigningCredential(new X509Certificate2(Path.Combine(Directory.GetCurrentDirectory(), "certs", "IdentityServer4Auth.pfx")))
+
+                    // тестовые пользователи
+                    .AddTestUsers(GetUsers())
+                    // this adds the config data from DB (clients, resources)
+                    .AddConfigurationStore(options =>
                     {
-                        CookieLifetime = TimeSpan.FromDays(1)
-                    };
+                        options.ConfigureDbContext = builder =>
+                            builder.UseSqlServer(ConnectionString,
+                                sql => sql.MigrationsAssembly(migrationsAssembly));
+                    })
+                    // this adds the operational data from DB (codes, tokens, consents)
+                    .AddOperationalStore(options =>
+                    {
+                        options.ConfigureDbContext = builder =>
+                            builder.UseSqlServer(ConnectionString,
+                                sql => sql.MigrationsAssembly(migrationsAssembly));
 
-                })
-                // тестовый x509-сертификат, IdentityServer использует RS256 для подписи JWT
-                //.AddDeveloperSigningCredential()
-                .AddSigningCredential(new X509Certificate2(Path.Combine(Directory.GetCurrentDirectory(), "certs", "IdentityServer4Auth.pfx")))
-         
-                // тестовые пользователи
-                .AddTestUsers(GetUsers())
-                // this adds the config data from DB (clients, resources)
-                .AddConfigurationStore(options =>
-                {
-                    options.ConfigureDbContext = builder =>
-                        builder.UseSqlServer(ConnectionString,
-                            sql => sql.MigrationsAssembly(migrationsAssembly));
-                })
-                // this adds the operational data from DB (codes, tokens, consents)
-                .AddOperationalStore(options =>
-                {
-                    options.ConfigureDbContext = builder =>
-                        builder.UseSqlServer(ConnectionString,
-                            sql => sql.MigrationsAssembly(migrationsAssembly));
+                        // this enables automatic token cleanup. this is optional.
+                        options.EnableTokenCleanup = true;
+                        options.TokenCleanupInterval = 30;
+                    });
+                // что включать в id_token
+                //.AddInMemoryIdentityResources(GetIdentityResources())
+                // что включать в access_token
+                //.AddInMemoryApiResources(GetApiResources())
+                // настройки клиентских приложений
+                //.AddInMemoryClients(GetClients());
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error when services.AddIdentityServer");
+            }
 
-                    // this enables automatic token cleanup. this is optional.
-                    options.EnableTokenCleanup = true;
-                    options.TokenCleanupInterval = 30;
-                });
-            // что включать в id_token
-            //.AddInMemoryIdentityResources(GetIdentityResources())
-            // что включать в access_token
-            //.AddInMemoryApiResources(GetApiResources())
-            // настройки клиентских приложений
-            //.AddInMemoryClients(GetClients());
         }
 
         #region MyRegion
@@ -283,7 +301,6 @@ namespace AuthServer
             // this will do the initial DB population
             InitializeDatabase(app);
 
-            loggerFactory.AddConsole(LogLevel.Debug);
             app.UseDeveloperExceptionPage();
 
             //app.UseCors(EnvOrigins);
